@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SuperDial Email Signature Generator</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    background: #f7f6fb;
+    color: #1a1a2e;
+    min-height: 100vh;
+    padding: 40px 20px 60px;
+  }
+
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 36px;
+  }
+
+  header svg { flex-shrink: 0; }
+
+  header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #2A195A;
+  }
+
+  header p {
+    font-size: 14px;
+    color: #666;
+    margin-top: 2px;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e8e4f0;
+    padding: 32px;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  @media (max-width: 640px) {
+    .layout { grid-template-columns: 1fr; }
+    .card { padding: 20px; }
+    header { flex-direction: column; align-items: flex-start; gap: 10px; }
+  }
+
+  label {
+    font-size: 13px;
+    color: #555;
+    display: block;
+    margin-bottom: 5px;
+    margin-top: 14px;
+    font-weight: 500;
+  }
+
+  label:first-of-type { margin-top: 0; }
+
+  input[type=text],
+  input[type=email],
+  input[type=tel],
+  input[type=url] {
+    width: 100%;
+    padding: 8px 11px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    color: #111;
+    outline: none;
+    transition: border-color 0.15s;
+    font-family: inherit;
+  }
+
+  input[type=text]:focus,
+  input[type=email]:focus,
+  input[type=tel]:focus,
+  input[type=url]:focus {
+    border-color: #73679E;
+  }
+
+  .seg {
+    display: flex;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 5px;
+  }
+
+  .seg button {
+    flex: 1;
+    padding: 8px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: #888;
+    font-family: inherit;
+    transition: background 0.12s, color 0.12s;
+  }
+
+  .seg button.active {
+    background: #f0eefa;
+    color: #2A195A;
+    font-weight: 600;
+  }
+
+  .seg button:not(:last-child) { border-right: 1px solid #ddd; }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: #f7f6fb;
+    border-radius: 8px;
+    border: 1px solid #e8e4f0;
+  }
+
+  .toggle-row span { font-size: 13px; color: #333; font-weight: 500; }
+  .toggle-row small { font-size: 11px; color: #888; display: block; margin-top: 2px; }
+
+  .switch { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; inset: 0; background: #ccc; border-radius: 20px; cursor: pointer; transition: background 0.2s; }
+  .slider:before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform 0.2s; }
+  .switch input:checked + .slider { background: #73679E; }
+  .switch input:checked + .slider:before { transform: translateX(16px); }
+
+  .drop-zone {
+    margin-top: 12px;
+    border: 1.5px dashed #ccc;
+    border-radius: 10px;
+    padding: 22px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+    position: relative;
+  }
+
+  .drop-zone:hover, .drop-zone.over {
+    background: #f7f6fb;
+    border-color: #73679E;
+  }
+
+  .drop-zone input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .drop-zone .icon {
+    font-size: 28px;
+    color: #aaa;
+    margin-bottom: 6px;
+  }
+
+  .drop-zone p { font-size: 12px; color: #888; margin-top: 3px; }
+  .drop-zone p.main { font-size: 13px; color: #555; font-weight: 500; }
+
+  .photo-preview {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .photo-preview img {
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 1px solid #e8e4f0;
+  }
+
+  .photo-preview .remove-btn {
+    font-size: 12px;
+    color: #888;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+    font-family: inherit;
+    padding: 0;
+    margin-top: 3px;
+    display: block;
+  }
+
+  .preview-label {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .sig-wrap {
+    background: #fff;
+    border: 1px solid #e8e4f0;
+    border-radius: 10px;
+    padding: 18px;
+    overflow: hidden;
+    min-height: 90px;
+  }
+
+  .copy-btn {
+    margin-top: 14px;
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+    font-weight: 500;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+  }
+
+  .copy-btn:hover { background: #f7f6fb; border-color: #73679E; }
+  .copy-btn.copied { border-color: #1D9E75; color: #0F6E56; background: #f0faf6; }
+
+  .copy-hint {
+    font-size: 11px;
+    color: #aaa;
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid #f0eefa;
+    margin: 20px 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header>
+    <svg width="40" height="31" viewBox="0 0 106 82" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10.6245 35.9155C11.1549 35.8128 11.7069 35.7371 12.2589 35.7047V32.3087C11.6582 33.4822 11.1116 34.688 10.6245 35.9155Z" fill="#2A195A"/>
+      <path d="M45.7713 40.3023C45.7713 38.7015 44.4726 37.4039 42.8705 37.4039C41.2685 37.4039 39.9697 38.7015 39.9697 40.3023V45.6287C39.9697 47.2295 41.2685 48.5272 42.8705 48.5272C44.4726 48.5272 45.7713 47.2295 45.7713 45.6287V40.3023Z" fill="#2A195A"/>
+      <path d="M72.9027 40.3023C72.9027 38.7015 71.6039 37.4039 70.0019 37.4039C68.3998 37.4039 67.1011 38.7015 67.1011 40.3023V45.6287C67.1011 47.2295 68.3998 48.5272 70.0019 48.5272C71.6039 48.5272 72.9027 47.2295 72.9027 45.6287V40.3023Z" fill="#2A195A"/>
+      <path d="M12.2589 32.3087V35.7047C11.7015 35.7371 11.1549 35.8128 10.6245 35.9155C11.117 34.688 11.6636 33.4767 12.2589 32.3087Z" fill="#2A195A"/>
+      <path d="M62.9895 9.02519H50.2498C33.6947 9.02519 19.3152 18.5046 12.2634 32.3209V35.7168C11.706 35.7493 11.1594 35.825 10.629 35.9277C11.1215 34.7002 11.6681 33.4889 12.2634 32.3209V17.4556C15.6567 16.1577 18.0596 12.87 18.0596 9.02519C18.0596 4.04484 14.0223 0 9.03252 0C4.04271 0 0 4.04484 0 9.02519C0 13.3783 3.0848 17.0121 7.18705 17.8665V37.1282C2.92786 39.3074 0 43.747 0 48.8355V49.7061C0 55.7302 4.11307 60.8403 9.66571 62.3706C13.9844 73.4074 24.7434 81.2429 37.2936 81.2429H75.9402C92.2897 81.2429 105.598 67.9458 105.598 51.6042C105.598 28.13 86.4773 9.02519 62.9841 9.02519H62.9895ZM88.3931 64.0415C85.2001 67.2374 80.7893 69.2166 75.9457 69.2166H37.299C27.6009 69.2166 19.6724 61.2891 19.6724 51.6042C19.6724 43.2009 23.1144 35.5654 28.6562 30.0227C34.198 24.4854 41.8451 21.0462 50.2552 21.0462H62.9949C79.8098 21.0462 93.5777 34.803 93.5777 51.6042C93.5777 56.4494 91.5916 60.8511 88.3985 64.0415H88.3931Z" fill="#2A195A"/>
+    </svg>
+    <div>
+      <h1>Email signature generator</h1>
+      <p>Fill in your details, choose a style, and copy your signature.</p>
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="layout">
+
+      <!-- Left: form -->
+      <div>
+        <label for="f-name">Full name</label>
+        <input type="text" id="f-name" placeholder="Jane Smith">
+
+        <label for="f-title">Title</label>
+        <input type="text" id="f-title" placeholder="Head of Marketing">
+
+        <label for="f-email">Email</label>
+        <input type="email" id="f-email" placeholder="jane@superdial.ai">
+
+        <label for="f-phone">Phone</label>
+        <input type="tel" id="f-phone" placeholder="+1 (555) 000-0000">
+
+        <label for="f-linkedin">LinkedIn URL</label>
+        <input type="url" id="f-linkedin" placeholder="https://linkedin.com/in/yourname">
+
+        <hr class="divider">
+
+        <label>Style</label>
+        <div class="seg">
+          <button class="active" id="tab-border" onclick="setMode('border')">&#9475; Left border</button>
+          <button id="tab-photo" onclick="setMode('photo')">&#9711; Headshot</button>
+        </div>
+
+        <div id="pane-photo" style="display:none">
+          <div class="toggle-row">
+            <div>
+              <span>Mobile fallback</span>
+              <small>Switch to left border on small screens</small>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="f-mobilefallback" checked onchange="render()">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="drop-zone" id="drop-zone">
+            <input type="file" accept="image/*" id="f-photo" onchange="handleFile(this.files[0])">
+            <div class="icon">&#8679;</div>
+            <p class="main">Drag &amp; drop or click to upload</p>
+            <p>JPG, PNG, WEBP &mdash; square crop works best</p>
+          </div>
+
+          <div class="photo-preview" id="photo-preview" style="display:none">
+            <img id="photo-thumb" src="" alt="Headshot preview">
+            <div>
+              <p style="font-size:13px;color:#333;font-weight:500">Photo uploaded</p>
+              <button class="remove-btn" onclick="clearPhoto()">Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: preview -->
+      <div>
+        <p class="preview-label">Live preview</p>
+        <div class="sig-wrap" id="sig-preview"></div>
+        <button class="copy-btn" id="copy-btn" onclick="copySignature()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span id="copy-label">Copy signature HTML</span>
+        </button>
+        <p class="copy-hint">Paste directly into Gmail, Outlook, or Apple Mail settings</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const LOGO_PATH = `<path d="M10.6245 35.9156C11.1549 35.8129 11.7069 35.7372 12.2589 35.7047V32.3088C11.6582 33.4822 11.1116 34.6881 10.6245 35.9156Z" fill="#2A195A"/><path d="M45.7713 40.3024C45.7713 38.7016 44.4726 37.4039 42.8705 37.4039C41.2685 37.4039 39.9697 38.7016 39.9697 40.3024V45.6288C39.9697 47.2296 41.2685 48.5272 42.8705 48.5272C44.4726 48.5272 45.7713 47.2296 45.7713 45.6288V40.3024Z" fill="#2A195A"/><path d="M72.9027 40.3024C72.9027 38.7016 71.6039 37.4039 70.0019 37.4039C68.3998 37.4039 67.1011 38.7016 67.1011 40.3024V45.6288C67.1011 47.2296 68.3998 48.5272 70.0019 48.5272C71.6039 48.5272 72.9027 47.2296 72.9027 45.6288V40.3024Z" fill="#2A195A"/><path d="M12.2589 32.3088V35.7047C11.7015 35.7372 11.1549 35.8129 10.6245 35.9156C11.117 34.6881 11.6636 33.4768 12.2589 32.3088Z" fill="#2A195A"/><path d="M62.9895 9.02525H50.2498C33.6947 9.02525 19.3152 18.5047 12.2634 32.321V35.7169C11.706 35.7493 11.1594 35.825 10.629 35.9278C11.1215 34.7003 11.6681 33.489 12.2634 32.321V17.4556C15.6567 16.1578 18.0596 12.87 18.0596 9.02525C18.0596 4.0449 14.0223 6.10352e-05 9.03252 6.10352e-05C4.04271 6.10352e-05 0 4.0449 0 9.02525C0 13.3783 3.0848 17.0122 7.18705 17.8666V37.1283C2.92786 39.3075 0 43.7471 0 48.8356V49.7062C0 55.7302 4.11307 60.8403 9.66571 62.3707C13.9844 73.4075 24.7434 81.243 37.2936 81.243H75.9402C92.2897 81.243 105.598 67.9459 105.598 51.6043C105.598 28.1301 86.4773 9.02525 62.9841 9.02525H62.9895ZM88.3931 64.0416C85.2001 67.2375 80.7893 69.2166 75.9457 69.2166H37.299C27.6009 69.2166 19.6724 61.2892 19.6724 51.6043C19.6724 43.2009 23.1144 35.5655 28.6562 30.0227C34.198 24.4854 41.8451 21.0462 50.2552 21.0462H62.9949C79.8098 21.0462 93.5777 34.803 93.5777 51.6043C93.5777 56.4494 91.5916 60.8512 88.3985 64.0416H88.3931Z" fill="#2A195A"/><path d="M165.142 22.1635C158.022 22.1635 154.089 25.4383 153.993 29.9325C153.897 34.7994 159.05 37.0465 164.859 38.3564L170.95 39.8526C182.568 42.4725 191.276 48.3724 191.276 59.6983C191.276 72.1478 181.534 80.0073 165.046 80.0073C148.557 80.0073 138.16 72.4247 137.787 57.9198H151.462C151.931 64.7516 157.361 68.2181 164.859 68.2181C172.357 68.2181 177.036 64.7569 177.036 59.6983C177.036 55.1136 172.821 52.9571 165.419 51.0881L158.017 49.3096C146.586 46.5034 139.562 40.7898 139.562 30.8696C139.562 18.516 150.428 10.369 165.227 10.369C180.026 10.369 190.146 18.6971 190.333 30.678H176.844C176.285 25.3425 171.974 22.1582 165.136 22.1582L165.142 22.1635Z" fill="#2A195A"/><path d="M257.789 11.3171V55.3109C257.789 70.1939 246.55 80.0235 229.688 80.0235C212.827 80.0235 201.678 70.1939 201.678 55.3109V11.3171H215.731V54.1874C215.731 61.9563 221.258 67.6646 229.688 67.6646C238.119 67.6646 243.645 61.9563 243.645 54.1874V11.3171H257.789Z" fill="#2A195A"/><path d="M270.882 11.3171H297.485C312.939 11.3171 321.749 20.7687 321.749 34.1554C321.749 47.542 312.753 56.9936 297.112 56.9936H284.935V79.081H270.882V11.3171ZM294.863 45.6677C303.198 45.6677 307.227 40.9871 307.227 34.1554C307.227 27.3236 303.198 22.8294 294.863 22.8294H284.935V45.6677H294.863Z" fill="#2A195A"/><path d="M330.164 11.3171H375.691V22.9253H344.217V39.4003H373.351V51.0085H344.217V67.4835H375.787V79.0917H330.164V11.3171Z" fill="#2A195A"/><path d="M387.756 11.3171H414.359C429.814 11.3171 438.623 20.0232 438.623 33.4046C438.623 42.6698 434.36 49.411 426.632 52.6858L441.059 79.081H425.508L412.58 55.0234H401.809V79.081H387.756V11.3171ZM411.738 43.6123C420.072 43.6123 424.101 40.1511 424.101 33.4099C424.101 26.6686 420.072 22.8348 411.738 22.8348H401.809V43.6123H411.738Z" fill="#2A195A"/><path d="M450.306 79.0864V11.3171H474.474C494.895 11.3171 507.355 24.0488 507.355 45.1086C507.355 66.1683 494.895 79.0864 474.191 79.0864H450.306ZM473.632 67.0096C486.56 67.0096 493.302 60.2684 493.302 45.1086C493.302 29.9488 486.555 23.3939 473.722 23.3939H464.354V67.0096H473.627H473.632Z" fill="#2A195A"/><path d="M532.734 79.0864H518.681V11.3171H532.734V79.0864Z" fill="#2A195A"/><path d="M540.886 79.0864L564.398 11.3171H582.48L605.901 79.0864H590.82L585.763 63.4526H561.222L556.068 79.0864H540.891H540.886ZM582.197 52.5048L573.671 26.5781H573.202L564.771 52.5048H582.197Z" fill="#2A195A"/><path d="M614.721 11.3171H628.774V67.4782H657.999V79.0864H614.721V11.3171Z" fill="#2A195A"/>`;
+
+const LOGO_H = Math.round(154 * (82 / 658));
+const PURPLE = '#73679E';
+const PHOTO_SIZE = 80;
+let mode = 'border';
+let photoDataURL = null;
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('tab-border').classList.toggle('active', m === 'border');
+  document.getElementById('tab-photo').classList.toggle('active', m === 'photo');
+  document.getElementById('pane-photo').style.display = m === 'photo' ? 'block' : 'none';
+  render();
+}
+
+function handleFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    photoDataURL = e.target.result;
+    document.getElementById('photo-thumb').src = photoDataURL;
+    document.getElementById('photo-preview').style.display = 'flex';
+    document.getElementById('drop-zone').style.display = 'none';
+    render();
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearPhoto() {
+  photoDataURL = null;
+  document.getElementById('f-photo').value = '';
+  document.getElementById('photo-preview').style.display = 'none';
+  document.getElementById('drop-zone').style.display = 'block';
+  render();
+}
+
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) handleFile(f);
+});
+
+function getVal(id) { return document.getElementById(id)?.value || ''; }
+function getChecked(id) { return document.getElementById(id)?.checked; }
+
+function buildTextBlock() {
+  const name = getVal('f-name');
+  const title = getVal('f-title');
+  const email = getVal('f-email');
+  const phone = getVal('f-phone');
+  const linkedin = getVal('f-linkedin');
+  const linkedinDisplay = linkedin.replace(/^https?:\/\//, '');
+  const linkedinRow = linkedin ? `<tr><td style="padding:1px 0;font-size:clamp(11px,2.8vw,13px)"><a href="${linkedin}" style="color:#444;text-decoration:none">${linkedinDisplay}</a></td></tr>` : '';
+
+  return `<table cellpadding="0" cellspacing="0" border="0" style="width:100%">
+    <tr><td style="padding:0 0 2px;font-size:clamp(13px,3.5vw,15px);font-weight:600;color:#2A195A">${name}</td></tr>
+    <tr><td style="padding:0 0 6px;font-size:clamp(10px,2.5vw,12px);color:#444;text-transform:uppercase;letter-spacing:0.5px">${title}</td></tr>
+    <tr><td style="padding:1px 0">
+      <table cellpadding="0" cellspacing="0" border="0"><tr>
+        ${email ? `<td style="white-space:nowrap"><a href="mailto:${email}" style="color:${PURPLE};text-decoration:none;font-size:clamp(11px,2.8vw,13px)">${email}</a></td>` : ''}
+        ${email && phone ? `<td style="padding:0 6px;color:#bbb;font-size:13px">|</td>` : ''}
+        ${phone ? `<td style="white-space:nowrap"><a href="tel:${phone}" style="color:${PURPLE};text-decoration:none;font-size:clamp(11px,2.8vw,13px)">${phone}</a></td>` : ''}
+      </tr></table>
+    </td></tr>
+    ${linkedinRow}
+    <tr><td style="padding-top:10px">
+      <a href="https://superdial.com" target="_blank" style="display:inline-block;line-height:0">
+        <svg width="154" height="${LOGO_H}" viewBox="0 0 658 82" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width:40vw;height:auto">${LOGO_PATH}</svg>
+      </a>
+    </td></tr>
+  </table>`;
+}
+
+function borderBlock(textBlock) {
+  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;width:100%;max-width:480px">
+  <tr><td style="border-left:3px solid ${PURPLE};padding-left:12px;vertical-align:top">${textBlock}</td></tr>
+</table>`;
+}
+
+function photoBlock(textBlock) {
+  const name = getVal('f-name');
+  const initials = name.split(' ').map(w => w[0] || '').slice(0, 2).join('');
+  const photoCell = photoDataURL
+    ? `<td style="padding-right:16px;vertical-align:top;width:${PHOTO_SIZE}px"><img src="${photoDataURL}" width="${PHOTO_SIZE}" height="${PHOTO_SIZE}" style="border-radius:16px;object-fit:cover;display:block;min-width:${PHOTO_SIZE}px" alt="${name}"></td>`
+    : `<td style="padding-right:16px;vertical-align:top;width:${PHOTO_SIZE}px"><div style="width:${PHOTO_SIZE}px;height:${PHOTO_SIZE}px;border-radius:16px;background:#e8e4f0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;color:#2A195A;font-family:Arial,sans-serif">${initials}</div></td>`;
+  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;width:100%;max-width:520px">
+  <tr>${photoCell}<td style="vertical-align:middle">${textBlock}</td></tr>
+</table>`;
+}
+
+function buildSignatureHTML() {
+  const textBlock = buildTextBlock();
+  if (mode === 'border') return borderBlock(textBlock);
+
+  const mobileFallback = getChecked('f-mobilefallback');
+  const desktopSig = photoBlock(textBlock);
+  const mobileSig = borderBlock(textBlock);
+
+  if (!mobileFallback) return desktopSig;
+
+  return `<!--[if !mso]><!-->
+<div class="sd-desktop" style="display:block">${desktopSig}</div>
+<div class="sd-mobile" style="display:none">${mobileSig}</div>
+<style>
+@media only screen and (max-width:480px){
+  .sd-desktop{display:none!important}
+  .sd-mobile{display:block!important}
+}
+</style>
+<!--<![endif]-->`;
+}
+
+function render() {
+  document.getElementById('sig-preview').innerHTML = buildSignatureHTML();
+}
+
+function copySignature() {
+  const html = buildSignatureHTML();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(html).then(showCopied);
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = html;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showCopied();
+  }
+}
+
+function showCopied() {
+  const btn = document.getElementById('copy-btn');
+  const lbl = document.getElementById('copy-label');
+  btn.classList.add('copied');
+  lbl.textContent = 'Copied!';
+  setTimeout(() => { btn.classList.remove('copied'); lbl.textContent = 'Copy signature HTML'; }, 2000);
+}
+
+document.querySelectorAll('input[type=text],input[type=email],input[type=tel],input[type=url]')
+  .forEach(el => el.addEventListener('input', render));
+
+render();
+</script>
+</body>
+</html>
