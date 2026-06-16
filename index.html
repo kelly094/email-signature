@@ -293,7 +293,7 @@
         <input type="email" id="f-email" placeholder="jane@superdial.ai">
 
         <label for="f-phone">Phone</label>
-        <input type="tel" id="f-phone" placeholder="+1 (555) 000-0000">
+        <input type="tel" id="f-phone" placeholder="332-699-0806" maxlength="12">
 
         <label for="f-linkedin">LinkedIn URL</label>
         <input type="url" id="f-linkedin" placeholder="https://linkedin.com/in/yourname">
@@ -416,7 +416,7 @@ function buildTextBlock() {
       <table cellpadding="0" cellspacing="0" border="0"><tr>
         ${email ? `<td style="white-space:nowrap"><a href="mailto:${email}" style="color:${PURPLE};text-decoration:none;font-size:clamp(11px,2.8vw,13px)">${email}</a></td>` : ''}
         ${email && phone ? `<td style="padding:0 6px;color:#bbb;font-size:13px">|</td>` : ''}
-        ${phone ? `<td style="white-space:nowrap"><a href="tel:${phone}" style="color:${PURPLE};text-decoration:none;font-size:clamp(11px,2.8vw,13px)">${phone}</a></td>` : ''}
+        ${phone ? `<td style="white-space:nowrap"><a href="tel:+1${phone.replace(/-/g,"")}" style="color:${PURPLE};text-decoration:none;font-size:clamp(11px,2.8vw,13px)">${phone}</a></td>` : ''}
       </tr></table>
     </td></tr>
     ${linkedinRow}
@@ -494,7 +494,23 @@ function showCopied() {
   setTimeout(() => { btn.classList.remove('copied'); lbl.textContent = 'Copy signature HTML'; }, 2000);
 }
 
-document.querySelectorAll('input[type=text],input[type=email],input[type=tel],input[type=url]')
+
+// Phone auto-format: digits only → NXX-NXX-XXXX
+document.getElementById('f-phone').addEventListener('input', function(e) {
+  let digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+  let formatted = '';
+  if (digits.length <= 3) {
+    formatted = digits;
+  } else if (digits.length <= 6) {
+    formatted = digits.slice(0, 3) + '-' + digits.slice(3);
+  } else {
+    formatted = digits.slice(0, 3) + '-' + digits.slice(3, 6) + '-' + digits.slice(6);
+  }
+  e.target.value = formatted;
+  render();
+});
+
+document.querySelectorAll('input[type=text],input[type=email],input[type=url]')
   .forEach(el => el.addEventListener('input', render));
 
 render();
