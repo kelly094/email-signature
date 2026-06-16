@@ -339,11 +339,15 @@
       <div>
         <p class="preview-label">Live preview</p>
         <div class="sig-wrap" id="sig-preview"></div>
-        <button class="copy-btn" id="copy-btn" onclick="copySignature()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          <span id="copy-label">Copy signature HTML</span>
+        <button class="copy-btn copy-gmail-btn" id="gmail-btn" onclick="copyForGmail()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span id="gmail-label">Copy for Gmail</span>
         </button>
-        <p class="copy-hint">Paste directly into Gmail, Outlook, or Apple Mail settings</p>
+        <button class="copy-btn" id="copy-btn" onclick="copySignature()" style="margin-top:8px;font-size:13px;color:#888;border-color:#eee;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span id="copy-label">Copy HTML (Outlook / Apple Mail)</span>
+        </button>
+        <p class="copy-hint">Gmail: paste directly into signature settings</p>
       </div>
 
     </div>
@@ -494,6 +498,47 @@ function showCopied() {
   setTimeout(() => { btn.classList.remove('copied'); lbl.textContent = 'Copy signature HTML'; }, 2000);
 }
 
+
+
+function copyForGmail() {
+  const sigHTML = buildSignatureHTML();
+  const blob = new Blob([sigHTML], { type: 'text/html' });
+  const richText = new Blob([sigHTML], { type: 'text/plain' });
+  try {
+    const clipItem = new ClipboardItem({ 'text/html': blob, 'text/plain': richText });
+    navigator.clipboard.write([clipItem]).then(() => {
+      const btn = document.getElementById('gmail-btn');
+      const lbl = document.getElementById('gmail-label');
+      btn.classList.add('copied');
+      lbl.textContent = 'Copied!';
+      setTimeout(() => { btn.classList.remove('copied'); lbl.textContent = 'Copy for Gmail'; }, 2000);
+    }).catch(() => fallbackGmailCopy(sigHTML));
+  } catch(e) {
+    fallbackGmailCopy(sigHTML);
+  }
+}
+
+function fallbackGmailCopy(sigHTML) {
+  // Render into a hidden div and copy as rich text via execCommand
+  const div = document.createElement('div');
+  div.innerHTML = sigHTML;
+  div.style.position = 'fixed';
+  div.style.left = '-9999px';
+  document.body.appendChild(div);
+  const range = document.createRange();
+  range.selectNodeContents(div);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  document.execCommand('copy');
+  sel.removeAllRanges();
+  document.body.removeChild(div);
+  const btn = document.getElementById('gmail-btn');
+  const lbl = document.getElementById('gmail-label');
+  btn.classList.add('copied');
+  lbl.textContent = 'Copied!';
+  setTimeout(() => { btn.classList.remove('copied'); lbl.textContent = 'Copy for Gmail'; }, 2000);
+}
 
 // Phone auto-format: digits only → NXX-NXX-XXXX
 document.getElementById('f-phone').addEventListener('input', function(e) {
