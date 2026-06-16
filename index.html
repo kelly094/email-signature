@@ -95,117 +95,6 @@
     border-color: #73679E;
   }
 
-  .seg {
-    display: flex;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    overflow: hidden;
-    margin-top: 5px;
-  }
-
-  .seg button {
-    flex: 1;
-    padding: 8px 10px;
-    font-size: 13px;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    color: #888;
-    font-family: inherit;
-    transition: background 0.12s, color 0.12s;
-  }
-
-  .seg button.active {
-    background: #f0eefa;
-    color: #2A195A;
-    font-weight: 600;
-  }
-
-  .seg button:not(:last-child) { border-right: 1px solid #ddd; }
-
-  .toggle-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 14px;
-    padding: 10px 12px;
-    background: #f7f6fb;
-    border-radius: 8px;
-    border: 1px solid #e8e4f0;
-  }
-
-  .toggle-row span { font-size: 13px; color: #333; font-weight: 500; }
-  .toggle-row small { font-size: 11px; color: #888; display: block; margin-top: 2px; }
-
-  .switch { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
-  .switch input { opacity: 0; width: 0; height: 0; }
-  .slider { position: absolute; inset: 0; background: #ccc; border-radius: 20px; cursor: pointer; transition: background 0.2s; }
-  .slider:before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform 0.2s; }
-  .switch input:checked + .slider { background: #73679E; }
-  .switch input:checked + .slider:before { transform: translateX(16px); }
-
-  .drop-zone {
-    margin-top: 12px;
-    border: 1.5px dashed #ccc;
-    border-radius: 10px;
-    padding: 22px 12px;
-    text-align: center;
-    cursor: pointer;
-    transition: background 0.12s, border-color 0.12s;
-    position: relative;
-  }
-
-  .drop-zone:hover, .drop-zone.over {
-    background: #f7f6fb;
-    border-color: #73679E;
-  }
-
-  .drop-zone input {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
-  }
-
-  .drop-zone .icon {
-    font-size: 28px;
-    color: #aaa;
-    margin-bottom: 6px;
-  }
-
-  .drop-zone p { font-size: 12px; color: #888; margin-top: 3px; }
-  .drop-zone p.main { font-size: 13px; color: #555; font-weight: 500; }
-
-  .photo-preview {
-    margin-top: 12px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .photo-preview img {
-    width: 52px;
-    height: 52px;
-    border-radius: 10px;
-    object-fit: cover;
-    border: 1px solid #e8e4f0;
-  }
-
-  .photo-preview .remove-btn {
-    font-size: 12px;
-    color: #888;
-    background: none;
-    border: none;
-    cursor: pointer;
-    text-decoration: underline;
-    font-family: inherit;
-    padding: 0;
-    margin-top: 3px;
-    display: block;
-  }
-
   .preview-label {
     font-size: 12px;
     color: #888;
@@ -297,42 +186,6 @@
 
         <label for="f-linkedin">LinkedIn URL</label>
         <input type="url" id="f-linkedin" placeholder="https://linkedin.com/in/yourname">
-
-        <hr class="divider">
-
-        <label>Style</label>
-        <div class="seg">
-          <button class="active" id="tab-border" onclick="setMode('border')">&#9475; Left border</button>
-          <button id="tab-photo" onclick="setMode('photo')">&#9711; Headshot</button>
-        </div>
-
-        <div id="pane-photo" style="display:none">
-          <div class="toggle-row">
-            <div>
-              <span>Mobile fallback</span>
-              <small>Switch to left border on small screens</small>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="f-mobilefallback" checked onchange="render()">
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <div class="drop-zone" id="drop-zone">
-            <input type="file" accept="image/*" id="f-photo" onchange="handleFile(this.files[0])">
-            <div class="icon">&#8679;</div>
-            <p class="main">Drag &amp; drop or click to upload</p>
-            <p>JPG, PNG, WEBP &mdash; square crop works best</p>
-          </div>
-
-          <div class="photo-preview" id="photo-preview" style="display:none">
-            <img id="photo-thumb" src="" alt="Headshot preview">
-            <div>
-              <p style="font-size:13px;color:#333;font-weight:500">Photo uploaded</p>
-              <button class="remove-btn" onclick="clearPhoto()">Remove</button>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Right: preview -->
@@ -359,46 +212,6 @@ const LOGO_PATH = `<path d="M10.6245 35.9156C11.1549 35.8129 11.7069 35.7372 12.
 
 const PURPLE = '#73679E';
 const PHOTO_SIZE = 80;
-let mode = 'border';
-let photoDataURL = null;
-
-function setMode(m) {
-  mode = m;
-  document.getElementById('tab-border').classList.toggle('active', m === 'border');
-  document.getElementById('tab-photo').classList.toggle('active', m === 'photo');
-  document.getElementById('pane-photo').style.display = m === 'photo' ? 'block' : 'none';
-  render();
-}
-
-function handleFile(file) {
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    photoDataURL = e.target.result;
-    document.getElementById('photo-thumb').src = photoDataURL;
-    document.getElementById('photo-preview').style.display = 'flex';
-    document.getElementById('drop-zone').style.display = 'none';
-    render();
-  };
-  reader.readAsDataURL(file);
-}
-
-function clearPhoto() {
-  photoDataURL = null;
-  document.getElementById('f-photo').value = '';
-  document.getElementById('photo-preview').style.display = 'none';
-  document.getElementById('drop-zone').style.display = 'block';
-  render();
-}
-
-const dz = document.getElementById('drop-zone');
-dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
-dz.addEventListener('dragleave', () => dz.classList.remove('over'));
-dz.addEventListener('drop', e => {
-  e.preventDefault(); dz.classList.remove('over');
-  const f = e.dataTransfer.files[0];
-  if (f && f.type.startsWith('image/')) handleFile(f);
-});
 
 function getVal(id) { return document.getElementById(id)?.value || ''; }
 function getChecked(id) { return document.getElementById(id)?.checked; }
@@ -412,8 +225,8 @@ function buildTextBlock() {
   const linkedinDisplay = linkedin.replace(/^https?:\/\//, '');
   const linkedinRow = linkedin ? `<tr><td style="padding:0;font-size:15px;line-height:1.2"><a href="${linkedin}" style="color:#444;text-decoration:none">${linkedinDisplay}</a></td></tr>` : '';
 
-  return `<table cellpadding="0" cellspacing="0" border="0" style="width:100%;background:#ffffff">
-    <tr><td style="padding:0 0 1px;font-size:16px;font-weight:600;color:#2A195A;line-height:1.2">${name}</td></tr>
+  return `<table cellpadding="0" cellspacing="0" border="0" style="width:100%;background:#ffffff;border-collapse:collapse">
+    <tr><td style="padding:0;font-size:16px;font-weight:600;color:#2A195A;line-height:1.2">${name}</td></tr>
     <tr><td style="padding:0 0 3px;font-size:14px;color:#444;text-transform:uppercase;letter-spacing:0.5px;line-height:1.2">${title}</td></tr>
     <tr><td style="padding:0;line-height:1.2">
       <table cellpadding="0" cellspacing="0" border="0"><tr>
@@ -431,41 +244,15 @@ function buildTextBlock() {
 
 function borderBlock(textBlock) {
   return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;width:100%;max-width:480px;background:#ffffff">
-  <tr><td style="border-left:2px solid ${PURPLE};padding-left:12px;vertical-align:top">${textBlock}</td></tr>
-</table>`;
-}
-
-function photoBlock(textBlock) {
-  const name = getVal('f-name');
-  const initials = name.split(' ').map(w => w[0] || '').slice(0, 2).join('');
-  const photoCell = photoDataURL
-    ? `<td style="padding-right:16px;vertical-align:top;width:${PHOTO_SIZE}px"><img src="${photoDataURL}" width="${PHOTO_SIZE}" height="${PHOTO_SIZE}" style="border-radius:16px;object-fit:cover;display:block;min-width:${PHOTO_SIZE}px" alt="${name}"></td>`
-    : `<td style="padding-right:16px;vertical-align:top;width:${PHOTO_SIZE}px"><div style="width:${PHOTO_SIZE}px;height:${PHOTO_SIZE}px;border-radius:16px;background:#e8e4f0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;color:#2A195A;font-family:Arial,sans-serif">${initials}</div></td>`;
-  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;width:100%;max-width:520px;background:#ffffff">
-  <tr>${photoCell}<td style="vertical-align:middle">${textBlock}</td></tr>
+  <tr>
+    <td width="2" style="width:2px;background-color:${PURPLE};font-size:0;line-height:0">&nbsp;</td>
+    <td style="padding-left:12px;vertical-align:top">${textBlock}</td>
+  </tr>
 </table>`;
 }
 
 function buildSignatureHTML() {
-  const textBlock = buildTextBlock();
-  if (mode === 'border') return borderBlock(textBlock);
-
-  const mobileFallback = getChecked('f-mobilefallback');
-  const desktopSig = photoBlock(textBlock);
-  const mobileSig = borderBlock(textBlock);
-
-  if (!mobileFallback) return desktopSig;
-
-  return `<!--[if !mso]><!-->
-<div class="sd-desktop" style="display:block">${desktopSig}</div>
-<div class="sd-mobile" style="display:none">${mobileSig}</div>
-<style>
-@media only screen and (max-width:480px){
-  .sd-desktop{display:none!important}
-  .sd-mobile{display:block!important}
-}
-</style>
-<!--<![endif]-->`;
+  return borderBlock(buildTextBlock());
 }
 
 function render() {
